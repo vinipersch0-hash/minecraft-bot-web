@@ -1,16 +1,18 @@
-FROM node:20
+FROM node:20-alpine
 
 # Instala o socat
-RUN apt-get update && apt-get install -y socat && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache socat
 
 WORKDIR /app
 
 # Copia os arquivos do projeto
-COPY package*.json ./
-RUN npm install
 COPY . .
 
-# Garante permissão ao script de inicialização
-RUN chmod +x start.sh
+# Instala as dependências do Node.js
+RUN npm install
 
-CMD ["./start.sh"]
+# Expõe a porta do painel (se houver)
+EXPOSE 3000
+
+# Inicia o proxy TCP e o server.js
+CMD sh -c "socat TCP-LISTEN:50000,fork,reuseaddr TCP:jogar.rederevo.com:25565 & node server.js"
